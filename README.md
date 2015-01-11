@@ -3,6 +3,6 @@ Simple IPv6 configuration script for Debian-based distros, mainly for [Online.ne
 
 Servers provided by [Online.net](http://www.online.net/) won't come with IPv6 enabled by default so this makes things a bit easier specially when owning multiple servers and IPv6 needs to be enabled by hand in each one.
 
-If you feel brave you can execute the script straight away:
+Just run the script and follow the instructions:
 
-`$ wget https://raw.githubusercontent.com/outime/ipv6-dhclient/master/ipv6-dhclient.sh -O - | sh`
+`$ bash ipv6-dhclient.sh`
