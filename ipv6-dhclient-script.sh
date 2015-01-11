@@ -53,6 +53,8 @@ clear
         read -p "Associated DUID (e.g. 00:03:00:00:34:b0:0c:47:4a:0e): " BLOCK_DUID
     done
 
+    echo "Working..."
+
     if [[ $DISTRO = "Debian" ]]; then
         INTERFACES_FILE="/etc/network/interfaces"
         echo "" >> $INTERFACES_FILE
@@ -96,7 +98,8 @@ clear
         systemctl restart ipv6-dhclient
     fi
 
-    IPV6_TEST=$(ping6 -c 4 ipv6.google.com | grep 'received' | awk -F',' '{ print $2 }' | awk '{ print $1 }')
+    echo "Testing IPv6 connectivity..."
+    IPV6_TEST=$(ping6 -c 8 ipv6.google.com | grep 'received' | awk -F',' '{ print $2 }' | awk '{ print $1 }')
     if [[ $IPV6_TEST > 0 ]]; then
         echo "Success!"
         exit 0
