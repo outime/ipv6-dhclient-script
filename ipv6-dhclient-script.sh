@@ -6,7 +6,7 @@ BLOCK_ADDR=$2
 BLOCK_SUBNET=$3
 BLOCK_DUID=$4
 
-if [[ "$USER" != "root" ]]; then
+if [[ "$(id -u)" != 0 ]]; then
         echo "Sorry, you need to run this as root"
         exit 1
 fi
@@ -25,12 +25,17 @@ fi
 while :
 do
 clear
+    if ! [[ -f /proc/net/if_inet6 ]]; then
+        echo "Seems that IPv6 is not supported by your kernel or the module is not loaded (is it blacklisted?)"
+        exit 1
+    fi
+
     echo "WARNING: Network will restart at the end of this script so any existing connections will be dropped!"
     
     while [[ $INTERFACE = "" ]]; do
         read -e -p "Interface where IPv6 will be enabled: " -i $DEFAULT_INTERFACE INTERFACE
     done
-    
+
     CURRENT_IPV6=$(ip addr show dev $INTERFACE | sed -e's/^.*inet6 \([^ ]*\)\/.*$/\1/;t;d')
     if [[ $? -eq 0 ]]; then
         echo "You have the following IPv6 addreses configured for $INTERFACE:"
