@@ -6,6 +6,8 @@ BLOCK_ADDR=$2
 BLOCK_SUBNET=$3
 BLOCK_DUID=$4
 
+DEFAULT_INTERFACE=`ip route get 8.8.8.8 | awk '{print $5; exit}'`
+
 if [[ "$(id -u)" != 0 ]]; then
         echo "Sorry, you need to run this as root"
         exit 1
@@ -13,10 +15,8 @@ fi
 
 if [[ -e /etc/debian_version ]]; then
     DISTRO="Debian"
-    DEFAULT_INTERFACE="eth0"
 elif [[ -f /etc/redhat-release ]]; then
     DISTRO="Redhat"
-    DEFAULT_INTERFACE="enp2s0"
 else
     echo "This distribution is not supported"
     exit 1
