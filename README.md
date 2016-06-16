@@ -5,7 +5,7 @@ Servers provided by [Online.net](http://www.online.net/) won't come with IPv6 en
 
 The script has been successfully tested under:
 
-* Ubuntu Server 14.04
+* Ubuntu Server 16.04 & 14.04
 * Debian 7.0 & 8.0
 * CentOS 7.0
 * Some Proxmox VE setups (see issue [#1](https://github.com/outime/ipv6-dhclient-script/issues/1) and [#2](https://github.com/outime/ipv6-dhclient-script/issues/2))
