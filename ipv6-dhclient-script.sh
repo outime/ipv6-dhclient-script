@@ -15,8 +15,13 @@ fi
 
 if [[ -e /etc/debian_version ]]; then
     DISTRO="Debian"
-elif [[ -f /etc/redhat-release ]]; then
-    DISTRO="Redhat"
+elif [[ -f /etc/centos-release ]]; then
+    RELEASE=$(rpm -q --queryformat '%{VERSION}' centos-release)
+    DISTRO="CentOS${RELEASE}"
+    if [[ $RELEASE != 7 ]]; then
+        echo "Only CentOS 7.x is supported"
+        exit 1
+    fi
 else
     echo "This distribution is not supported"
     exit 1
@@ -69,7 +74,7 @@ clear
         echo "accept_ra 1" >> $INTERFACES_FILE
         echo "pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$INTERFACE.pid -6 -P $INTERFACE" >> $INTERFACES_FILE
         echo "pre-down dhclient -x -pf /run/dhclient6.$INTERFACE.pid" >> $INTERFACES_FILE
-    elif [[ $DISTRO = "Redhat" ]]; then
+    elif [[ $DISTRO = "CentOS7" ]]; then
         INTERFACES_FILE="/etc/systemd/system/ipv6-dhclient.service"
         echo "[Unit]" >> $INTERFACES_FILE
         echo "Description=$INTERFACE IPv6" >> $INTERFACES_FILE
@@ -103,7 +108,7 @@ clear
         echo "net.ipv6.conf.default.proxy_ndp=1" >> /etc/sysctl.conf
         echo "net.ipv6.conf.all.proxy_ndp=1" >> /etc/sysctl.conf
         ifdown $INTERFACE && ifup $INTERFACE
-    elif [[ $DISTRO = "Redhat" ]]; then
+    elif [[ $DISTRO = "CentOS7" ]]; then
         systemctl enable ipv6-dhclient
         systemctl restart ipv6-dhclient
     fi
