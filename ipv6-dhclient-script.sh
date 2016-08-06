@@ -8,9 +8,13 @@ BLOCK_DUID=$4
 
 DEFAULT_INTERFACE=`ip route get 8.8.8.8 | awk '{print $5; exit}'`
 
+write_from_template () {
+    sed -e "s/{{INTERFACE}}/$INTERFACE/g" -e "s/{{BLOCK_ADDR}}/$BLOCK_ADDR/g" -e "s/{{BLOCK_SUBNET}}/$BLOCK_SUBNET/g" -e "s/{{BLOCK_DUID}}/$BLOCK_DUID/g" templates/$1 >> $2
+}
+
 if [[ "$(id -u)" != 0 ]]; then
-        echo "Sorry, you need to run this as root"
-        exit 1
+    echo "Sorry, you need to run this as root"
+    exit 1
 fi
 
 if [[ -e /etc/debian_version ]]; then
@@ -66,47 +70,16 @@ clear
     echo "Working..."
 
     if [[ $DISTRO = "Debian" ]]; then
-        INTERFACES_FILE="/etc/network/interfaces"
-        echo "" >> $INTERFACES_FILE
-        echo "iface $INTERFACE inet6 static" >> $INTERFACES_FILE
-        echo "address $BLOCK_ADDR" >> $INTERFACES_FILE
-        echo "netmask $BLOCK_SUBNET" >> $INTERFACES_FILE
-        echo "accept_ra 1" >> $INTERFACES_FILE
-        echo "pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$INTERFACE.pid -6 -P $INTERFACE" >> $INTERFACES_FILE
-        echo "pre-down dhclient -x -pf /run/dhclient6.$INTERFACE.pid" >> $INTERFACES_FILE
+        write_from_template Debian/etc_network_interfaces /etc/network/interfaces
     elif [[ $DISTRO = "CentOS7" ]]; then
-        INTERFACES_FILE="/etc/systemd/system/ipv6-dhclient.service"
-        echo "[Unit]" >> $INTERFACES_FILE
-        echo "Description=$INTERFACE IPv6" >> $INTERFACES_FILE
-        echo "After=network.target" >> $INTERFACES_FILE
-        echo "" >> $INTERFACES_FILE
-        echo "[Service]" >> $INTERFACES_FILE
-        echo "Type=oneshot" >> $INTERFACES_FILE
-        echo "RemainAfterExit=yes" >> $INTERFACES_FILE
-        echo "ExecStart=/usr/sbin/dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$INTERFACE.pid -6 -P $INTERFACE" >> $INTERFACES_FILE
-        echo "ExecStart=/usr/sbin/ifconfig $INTERFACE inet6 add $BLOCK_ADDR/$BLOCK_SUBNET" >> $INTERFACES_FILE
-        echo "" >> $INTERFACES_FILE
-        echo "ExecStop=/usr/bin/killall dhclient" >> $INTERFACES_FILE
-        echo "ExecStop=/usr/sbin/ifconfig $INTERFACE inet6 del $BLOCK_ADDR/$BLOCK_SUBNET" >> $INTERFACES_FILE
-        echo "" >> $INTERFACES_FILE
-        echo "[Install]" >> $INTERFACES_FILE
-        echo "WantedBy=multi-user.target" >> $INTERFACES_FILE
+        write_from_template CentOS7/etc_systemd_system_ipv6-dhclient.service /etc/systemd/system/ipv6-dhclient.service
     fi
 
-    DHCLIENT6_FILE="/etc/dhcp/dhclient6.conf"
-    echo "interface \"$INTERFACE\" {" >> $DHCLIENT6_FILE
-    echo "send dhcp6.client-id $BLOCK_DUID;" >> $DHCLIENT6_FILE
-    echo "request;" >> $DHCLIENT6_FILE
-    echo "}" >> $DHCLIENT6_FILE
+    write_from_template etc_dhcp_dhclient6.conf /etc/dhcp/dhclient6.conf
 
     if [[ $DISTRO = "Debian" ]]; then
         sysctl -w net.ipv6.conf.$INTERFACE.autoconf=0
-        echo "net.ipv6.conf.$INTERFACE.autoconf=0" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.$INTERFACE.accept_ra=2" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.default.forwarding=1" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.default.proxy_ndp=1" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.all.proxy_ndp=1" >> /etc/sysctl.conf
+        write_from_template Debian/etc_sysctl.conf /etc/sysctl.conf
         ifdown $INTERFACE && ifup $INTERFACE
     elif [[ $DISTRO = "CentOS7" ]]; then
         systemctl enable ipv6-dhclient
