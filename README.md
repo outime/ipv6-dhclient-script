@@ -12,10 +12,10 @@ The script has been successfully tested under:
 
 Just run the script and follow the instructions:
 
-`$ bash ipv6-dhclient-script.sh`
+`$ ./ipv6-dhclient-script.sh`
 
 You can also pass parameters straight away:
 
-`$ bash ipv6-dhclient-script.sh <interface> <address block> <subnet> <duid>`
+`$ ./ipv6-dhclient-script.sh <interface> <address block> <subnet> <duid>`
 
 Some questions were answered [in a LowEndTalk thread](http://www.lowendtalk.com/discussion/40695/ipv6-dhclient-auto-configuration-script-online-net) although I really encourage you to open an issue [here](https://github.com/outime/ipv6-dhclient-script/issues/new) instead of posting there.
