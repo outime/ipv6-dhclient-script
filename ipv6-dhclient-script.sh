@@ -27,7 +27,7 @@ elif [[ -f /etc/centos-release ]]; then
         exit 1
     fi
 else
-    echo "This distribution is not supported"
+    echo "This distribution type/version is not supported"
     exit 1
 fi
 
@@ -71,6 +71,9 @@ clear
 
     if [[ $DISTRO = "Debian" ]]; then
         write_from_template Debian/etc_network_interfaces /etc/network/interfaces
+    elif [[ $DISTRO = "CentOS6" ]]; then
+        write_from_template CentOS6/etc_init.d_ipv6-dhclient /etc/init.d/ipv6-dhclient
+        chmod +x /etc/init.d/ipv6-dhclient
     elif [[ $DISTRO = "CentOS7" ]]; then
         write_from_template CentOS7/etc_systemd_system_ipv6-dhclient.service /etc/systemd/system/ipv6-dhclient.service
     fi
@@ -81,6 +84,9 @@ clear
         sysctl -w net.ipv6.conf.$INTERFACE.autoconf=0
         write_from_template Debian/etc_sysctl.conf /etc/sysctl.conf
         ifdown $INTERFACE && ifup $INTERFACE
+    elif [[ $DISTRO = "CentOS6" ]]; then
+        chkconfig --add ipv6-dhclient
+        service ipv6-dhclient start
     elif [[ $DISTRO = "CentOS7" ]]; then
         systemctl enable ipv6-dhclient
         systemctl restart ipv6-dhclient

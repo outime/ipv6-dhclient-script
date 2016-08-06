@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# ipv6-dhclient    Created by https://github.com/outime/ipv6-dhclient-script
+# chkconfig: 2345 11 89
+# description: ipv6-dhclient startup script
+
+# Source function library.
+. /etc/init.d/functions
+
+RETVAL=0
+prog="ipv6-dhclient"
+LOCKFILE=/var/lock/subsys/$prog
+
+INTERFACE={{INTERFACE}}
+BLOCK_ADDR={{BLOCK_ADDR}}
+BLOCK_SUBNET={{BLOCK_SUBNET}}
+
+start() {
+    echo -n "Starting $prog: "
+    /sbin/dhclient -cf /etc/dhcp/dhclient6.conf -pf /var/run/dhclient6.$INTERFACE.pid -6 -P $INTERFACE && \
+        /sbin/ifconfig $INTERFACE inet6 add $BLOCK_ADDR/$BLOCK_SUBNET && \
+        success || failure
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch $LOCKFILE
+    echo
+    return $RETVAL
+}
+
+stop() {
+    echo -n "Shutting down $prog: "
+    /usr/bin/killall dhclient && \
+        /sbin/ifconfig $INTERFACE inet6 del $BLOCK_ADDR/$BLOCK_SUBNET && \
+        success || failure
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+    echo
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+exit $RETVAL
