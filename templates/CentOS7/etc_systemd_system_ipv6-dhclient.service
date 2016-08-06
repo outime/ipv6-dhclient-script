@@ -1,0 +1,15 @@
+[Unit]
+Description={{INTERFACE}} IPv6
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.{{INTERFACE}}.pid -6 -P {{INTERFACE}}
+ExecStart=/usr/sbin/ifconfig {{INTERFACE}} inet6 add {{BLOCK_ADDR}}/{{BLOCK_SUBNET}}
+
+ExecStop=/usr/bin/killall dhclient
+ExecStop=/usr/sbin/ifconfig {{INTERFACE}} inet6 del {{BLOCK_ADDR}}/{{BLOCK_SUBNET}}
+
+[Install]
+WantedBy=multi-user.target

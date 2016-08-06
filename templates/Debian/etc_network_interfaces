@@ -1,0 +1,7 @@
+
+iface {{INTERFACE}} inet6 static
+address {{BLOCK_ADDR}}
+netmask {{BLOCK_SUBNET}}
+accept_ra 1
+pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.{{INTERFACE}}.pid -6 -P {{INTERFACE}}
+pre-down dhclient -x -pf /run/dhclient6.{{INTERFACE}}.pid
