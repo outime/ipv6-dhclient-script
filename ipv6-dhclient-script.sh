@@ -22,10 +22,6 @@ if [[ -e /etc/debian_version ]]; then
 elif [[ -f /etc/centos-release ]]; then
     RELEASE=$(rpm -q --queryformat '%{VERSION}' centos-release)
     DISTRO="CentOS${RELEASE}"
-    if [[ $RELEASE != 7 ]]; then
-        echo "Only CentOS 7.x is supported"
-        exit 1
-    fi
 else
     echo "This distribution type/version is not supported"
     exit 1
