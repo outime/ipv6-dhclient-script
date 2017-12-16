@@ -12,9 +12,13 @@ write_from_template () {
     sed -e "s/{{INTERFACE}}/$INTERFACE/g" -e "s/{{BLOCK_ADDR}}/$BLOCK_ADDR/g" -e "s/{{BLOCK_SUBNET}}/$BLOCK_SUBNET/g" -e "s/{{BLOCK_DUID}}/$BLOCK_DUID/g" templates/$1 >> $2
 }
 
-if [[ "$(id -u)" != 0 ]]; then
-    echo "Sorry, you need to run this as root"
+err_exit () {
+    echo "$1" >&2
     exit 1
+}
+
+if [[ "$(id -u)" != 0 ]]; then
+    err_exit "Sorry, you need to run this as root."
 fi
 
 if [[ -e /etc/debian_version ]]; then
@@ -23,16 +27,14 @@ elif [[ -f /etc/centos-release ]]; then
     RELEASE=$(rpm -q --queryformat '%{VERSION}' centos-release)
     DISTRO="CentOS${RELEASE}"
 else
-    echo "This distribution type/version is not supported"
-    exit 1
+    err_exit "This distribution type or version is not supported."
 fi
 
 while :
 do
 clear
     if ! [[ -f /proc/net/if_inet6 ]]; then
-        echo "Seems that IPv6 is not supported by your kernel or the module is not loaded (is it blacklisted?)"
-        exit 1
+        err_exit "Seems that IPv6 is not supported by your kernel or the module is not loaded (is it blacklisted?)."
     fi
 
     echo "WARNING: Network will restart at the end of this script so any existing connections will be dropped!"
@@ -95,9 +97,7 @@ clear
     IPV6_TEST=$(ping6 -c 8 ipv6.google.com | grep 'received' | awk -F',' '{ print $2 }' | awk '{ print $1 }')
     if [[ $IPV6_TEST > 0 ]]; then
         echo "Success!"
-        exit 0
     else
-        echo "Something went wrong :("
-        exit 1
+        err_exit "Something went wrong :("
     fi
 done
