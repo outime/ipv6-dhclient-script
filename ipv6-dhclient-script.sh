@@ -22,6 +22,7 @@ if [[ "$(id -u)" != 0 ]]; then
 fi
 
 if [[ -e /etc/debian_version ]]; then
+    RELEASE=$(cat /etc/debian_version)
     DISTRO="Debian"
 elif [[ -f /etc/centos-release ]]; then
     RELEASE=$(rpm -q --queryformat '%{VERSION}' centos-release)
@@ -91,6 +92,24 @@ clear
     elif [[ $DISTRO = "CentOS7" ]]; then
         systemctl enable ipv6-dhclient
         systemctl restart ipv6-dhclient
+    fi
+
+    if [[ $DISTRO != "Debian" ]] || [[ $DISTRO = "Debian" && $VERSION != "6*" ]]; then  # TODO: Support for loading IPv6 rules on boot for Debian Squeeze
+        echo "Would you like to limit DHCP client traffic to prevent accidental UDP flood towards your provider?"
+        echo "This will enable iptables, add a few rules and load them on boot along with other existing rules."
+        if [[ $DISTRO = "Debian" ]]; then echo "This will install an additional package (iptables-persistent)."; fi
+        read -e -p "Limit traffic? [Y/n]: " -i "Y" SKIP
+        if [[ $SKIP =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            ip6tables -A OUTPUT -p udp --dport 547 -m limit --limit 10/min --limit-burst 5 -j ACCEPT
+            ip6tables -A OUTPUT -p udp --dport 547 -j DROP
+            if [[ $DISTRO = "Debian" ]]; then
+                ip6tables-save > /etc/iptables/rules.v6
+                apt update -q && apt install -y iptables-persistent
+            elif [[ $DISTRO = "CentOS*" ]]; then
+                ip6tables-save > /etc/sysconfig/ip6tables
+                chkconfig iptables on
+            fi
+        fi
     fi
 
     echo "Testing IPv6 connectivity..."
