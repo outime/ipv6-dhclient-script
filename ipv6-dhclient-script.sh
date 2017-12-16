@@ -80,6 +80,9 @@ clear
         sysctl -w net.ipv6.conf.$INTERFACE.autoconf=0
         write_from_template Debian/etc_sysctl.conf /etc/sysctl.conf
         ifdown $INTERFACE && ifup $INTERFACE
+        if [ $? -ne 0 ]; then
+            ifup $INTERFACE  # see https://git.io/vbKYM
+        fi
     elif [[ $DISTRO = "CentOS6" ]]; then
         chkconfig --add ipv6-dhclient
         service ipv6-dhclient start
